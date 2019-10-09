@@ -70,6 +70,7 @@ int wmain(int argc, wchar_t *argv[])
 	int KeyLength = 0;
 	bool SkipMediaCheck = false;
 	bool ShowVolumeStatus = false;
+	bool WaitMedia = false;
 	memset(&drvOptions, 0, sizeof(drvOptions));
 
 	drvOptions.CKOD = true;
@@ -105,6 +106,7 @@ int wmain(int argc, wchar_t *argv[])
 			wprintf(L"      keylength:    Size in Bits (e.g. 256)\n");
 			wprintf(L"  /s                Skip Media check\n");
 			wprintf(L"  /volumestatus     Show volume status\n");
+			wprintf(L"  /w                Wait for media insertion\n");
 			return(1);
 		}
 
@@ -209,6 +211,11 @@ int wmain(int argc, wchar_t *argv[])
 		if (thisCmd == L"/s")
 		{
 			SkipMediaCheck = true;
+		}
+
+		if (thisCmd == L"/w")
+		{
+			WaitMedia = true;
 		}
 
 		if (thisCmd == L"/g")
@@ -330,29 +337,77 @@ int wmain(int argc, wchar_t *argv[])
 	if (SkipMediaCheck == false)
 	{
 		DWORD tapestatus = GetTapeStatus(hDevice);
-		tapestatus = GetTapeStatus(hDevice); //run it twice, fist call may be an I/O issue
 
-		if (tapestatus != 0)
+		int Spinner = 0;
+
+		if (WaitMedia == true)
 		{
-			if (tapestatus == 1110)
+			wprintf(L"Waiting for tape ...  ");
+		}
+
+		do
+		{
+			switch (Spinner)
 			{
-				tapestatus = PrepareTape(hDevice, TAPE_LOAD, false);
-				if (tapestatus != 0)
+				case 0: wprintf(L"\b-"); break;
+				case 1: wprintf(L"\b\\"); break;
+				case 2: wprintf(L"\b|"); break;
+				case 3: wprintf(L"\b/"); break;
+			}
+			Spinner++;
+			if (Spinner > 3)
+				Spinner = 0;
+
+			tapestatus = GetTapeStatus(hDevice);
+
+			if (tapestatus != 0)
+			{
+				if (tapestatus == 1110)
 				{
-					wstring err = GetErrorAsString(GetLastError());
-					wprintf(L"PrepareTape returned error 0x%X - %s\n", tapestatus, &err[0]);
-					CloseHandle(hDevice);
-					return(5);
+					tapestatus = PrepareTape(hDevice, TAPE_LOAD, false);
+					if (tapestatus != 0)
+					{
+						if (WaitMedia == false)
+						{
+							wstring err = GetErrorAsString(GetLastError());
+							wprintf(L"PrepareTape returned error 0x%X - %s\n", tapestatus, &err[0]);
+							CloseHandle(hDevice);
+							return(5);
+						}
+						else
+						{
+							Sleep(1000);
+							continue;
+						}
+					}
+				}
+				else
+				{
+					if (WaitMedia == false)
+					{
+						wstring err = GetErrorAsString(GetLastError());
+						wprintf(L"Tapestatus returned error 0x%X - %s\n", tapestatus, &err[0]);
+						CloseHandle(hDevice);
+						return(5);
+					}
+					else
+					{
+						Sleep(1000);
+						continue;
+					}
 				}
 			}
 			else
 			{
-				wstring err = GetErrorAsString(GetLastError());
-				wprintf(L"Tapestatus returned error 0x%X - %s\n", tapestatus, &err[0]);
-				CloseHandle(hDevice);
-				return(5);
+				break;
 			}
+		} while (WaitMedia == true);
+
+		if (WaitMedia == true)
+		{
+			wprintf(L"\bOK\n");
 		}
+
 	}
 
 	if (ShowVolumeStatus == true)
@@ -425,7 +480,7 @@ int wmain(int argc, wchar_t *argv[])
 		}
 		else
 		{
-			wprintf(L"OK\n");
+			wprintf(L"OK\n\n");
 		}
 
 		if (ShowDriveStatus(hDevice) != 0)
