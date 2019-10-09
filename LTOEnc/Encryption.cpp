@@ -127,7 +127,10 @@ int SCSIWriteEncryptOptions(HANDLE hDevice, SCSIEncryptOptions* eOptions, int *S
 			options.decryptionMode = 1;
 			break;
 		default:
-			byteswap((unsigned char*)options.keyLength, 2, DEFAULT_KEYSIZE);
+			options.keyLength[0] = 0x00;
+			options.keyLength[1] = 0x20;
+			options.ckod = 0;
+			options.CEEM = 0;
 			eOptions->cryptoKey = ""; //blank the key
 			eOptions->keyName = ""; //blank the key name, not supported when turned off
 			break;

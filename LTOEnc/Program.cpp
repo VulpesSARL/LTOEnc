@@ -347,12 +347,15 @@ int wmain(int argc, wchar_t *argv[])
 
 		do
 		{
-			switch (Spinner)
+			if (WaitMedia == true)
 			{
+				switch (Spinner)
+				{
 				case 0: wprintf(L"\b-"); break;
 				case 1: wprintf(L"\b\\"); break;
 				case 2: wprintf(L"\b|"); break;
 				case 3: wprintf(L"\b/"); break;
+				}
 			}
 			Spinner++;
 			if (Spinner > 3)
@@ -410,40 +413,43 @@ int wmain(int argc, wchar_t *argv[])
 
 	}
 
+	if (ShowDriveStatus(hDevice) != 0)
+		return(6);
 	if (ShowVolumeStatus == true)
 	{
 		if (ShowvolumeStatus(hDevice, true) != 0)
 			return(6);
 	}
-	if (ShowDriveStatus(hDevice) != 0)
-		return(6);
 
 	if (action == 1)
 	{
-		Keyinfo ki;
-		string keyInput;
-		string keyDesc;
-		ifstream myfile(keyfile);
-		if (myfile.is_open())
+		if (drvOptions.cryptMode != CRYPTMODE_OFF)
 		{
-			getline(myfile, keyInput);
-			getline(myfile, keyDesc);
-			myfile.close();
-			ki.load(keyInput);
-			if (!ki.valid)
+			Keyinfo ki;
+			string keyInput;
+			string keyDesc;
+			ifstream myfile(keyfile);
+			if (myfile.is_open())
 			{
-				wprintf(L"Keyfile %s is invalid.\n", &keyfile[0]);
+				getline(myfile, keyInput);
+				getline(myfile, keyDesc);
+				myfile.close();
+				ki.load(keyInput);
+				if (!ki.valid)
+				{
+					wprintf(L"Keyfile %s is invalid.\n", &keyfile[0]);
+					return(5);
+				}
+				drvOptions.keyName = keyDesc;
+			}
+			else
+			{
+				wprintf(L"Cannot load Keyfile %s.\n", &keyfile[0]);
 				return(5);
 			}
-			drvOptions.keyName = keyDesc;
-		}
-		else
-		{
-			wprintf(L"Cannot load Keyfile %s.\n", &keyfile[0]);
-			return(5);
-		}
 
-		drvOptions.cryptoKey.assign(ki.key, ki.keySize);
+			drvOptions.cryptoKey.assign(ki.key, ki.keySize);
+		}
 
 		wprintf(L"Changing encryption parameters ... ");
 
@@ -625,5 +631,6 @@ int ShowvolumeStatus(HANDLE hDevice, bool WithRewind)
 		}
 		break;
 	}
+	wprintf(L"\n");
 	return(0);
 }
