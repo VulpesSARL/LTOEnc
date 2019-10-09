@@ -14,16 +14,26 @@ LTOEnc /?
 Displays help text
 
 
+
 ```
 LTOEnc /k mykey.txt /g 256
 ```
 Generates a new key in mykey.txt with the length of 256 Bits
 
 
+
 ```
 LTOEnc /k mykey.txt /e mixed
 ```
 Turn on tape encryption in mixed mode (reads encrypted and unencrypted data from tape, writes encrypted data)
+
+
+
+```
+LTOEnc /s /e off
+```
+Turn off tape encryption
+
 
 
 ```
