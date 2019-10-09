@@ -1,6 +1,6 @@
 # LTOEnc
 
-LTOEnc – LTO Encryption Management is a small program to manage encryption on your LTO Tapes on Microsoft Windows. It supports LTO4 drives and higher. It can co-exists with LTFS drivers.
+LTOEnc â€“ LTO Encryption Management is a small program to manage encryption on your LTO Tapes on Microsoft Windows. It supports LTO4 drives and higher. It can co-exist with LTFS drivers.
 
 It has been tested with a HP Ultrium5 3000, IBM ULT3580-HH5 and IBM ULTRIUM 7 HH Tape Drives.
 
